@@ -33,7 +33,6 @@ public class WatchlistService {
         // Step B: Find the real User and Content objects
         User user = userRepo.findById(userId).orElse(null);
         Content content = contentRepo.findById(contentId).orElse(null);
-
         if (user == null || content == null) {
             return "User or Content not found";
         }
