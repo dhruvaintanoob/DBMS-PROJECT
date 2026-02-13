@@ -24,11 +24,11 @@ public class WatchlistController {
     @GetMapping("/user/{userId}")
     public List<Watchlist> getUserWatchlist(@PathVariable Long userId) {
         return watchlistService.getUserWatchlist(userId);
-    
+    }
 
     // 3. DELETE: Remove an item
     @DeleteMapping("/delete/{id}")
     public String removeFromWatchlist(@PathVariable Long id) {
         return watchlistService.removeFromWatchlist(id);
-    }
+    }   
 }
