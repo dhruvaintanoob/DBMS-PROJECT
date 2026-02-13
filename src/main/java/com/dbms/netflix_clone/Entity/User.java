@@ -10,6 +10,7 @@ import lombok.Data;
 public class User {
     @Id // Marks this field as the Primary Key
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Tells MySQL to auto-increment the ID
+
     private Long id;
 
     @Column(nullable = false) 
