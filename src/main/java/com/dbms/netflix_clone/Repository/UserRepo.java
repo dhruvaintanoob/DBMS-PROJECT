@@ -1,24 +1,15 @@
 package com.dbms.netflix_clone.Repository;
 
-
 import com.dbms.netflix_clone.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Repository; 
 
-
-import java.util.*;
-
-
+@Repository 
 public interface UserRepo extends JpaRepository<User,Long> {
-    User findByEmail(String email);
-    // Spring takes the name of your method, strips away the 
-    // findBy prefix, and then looks for a field in your Entity that matches the rest of the name.
 
+    User findByEmail(String email); // find a user by their email
+    boolean existsByEmail(String email); // check if a user with a given email already exists
 
-
-    boolean existsByEmail(String email);
-
-    List<User> findByNameContaining(String name);
-
-
+    User findByUsername(String username); // find a user by their username
+    boolean existsByUsername(String username);
 }

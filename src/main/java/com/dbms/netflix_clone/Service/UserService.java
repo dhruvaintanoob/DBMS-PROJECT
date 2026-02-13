@@ -14,24 +14,22 @@ public class UserService {
     private UserRepo ur;
 
     public String registerNewUser(User user) {
-
-        
-        //return ur.save(user);
         if (ur.existsByEmail(user.getEmail())){
             return "Error , email already in Use";
         }
+        if (ur.existsByUsername(user.getUsername())) {
+            return "Error: Username already taken";
+        }
         ur.save(user);
-        return "User saved";
-
-
+        return "User registered successfully";
     }
 
     public List<User> getAllUsers() {
-        return ur.findAll();
+        return ur.findAll(); 
     }
 
-    public User login(String email,String password){
-        User user = ur.findByEmail(email);
+    public User login(String username, String password) {
+        User user = ur.findByUsername(username);
         if (user != null && user.getPassword().equals(password)) {
             return user;
         }
