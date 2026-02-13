@@ -12,7 +12,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Tells MySQL to auto-increment the ID
     private Long id;
 
-    @Column(unique = true, nullable = false) 
+    @Column(nullable = false) 
     private String username;
     
     @Column(unique = true, nullable = false) // Ensures no two users have the same email

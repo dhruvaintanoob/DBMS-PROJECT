@@ -17,9 +17,7 @@ public class UserService {
         if (ur.existsByEmail(user.getEmail())){
             return "Error , email already in Use";
         }
-        if (ur.existsByUsername(user.getUsername())) {
-            return "Error: Username already taken";
-        }
+         
         ur.save(user);
         return "User registered successfully";
     }
