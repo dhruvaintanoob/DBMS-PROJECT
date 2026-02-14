@@ -1,14 +1,13 @@
 package com.dbms.netflix_clone.Service;
 
 import com.dbms.netflix_clone.Entity.Content;
-import com.dbms.netflix_clone.Entity.User;
+import com.dbms.netflix_clone.Entity.Profile;
 import com.dbms.netflix_clone.Entity.UserContentInteraction;
 import com.dbms.netflix_clone.Repository.ContentRepo;
+import com.dbms.netflix_clone.Repository.ProfileRepo;
 import com.dbms.netflix_clone.Repository.UserContentInteractionRepo;
-import com.dbms.netflix_clone.Repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -18,44 +17,34 @@ public class UserContentInteractionService {
     private UserContentInteractionRepo interactionRepo;
 
     @Autowired
-    private UserRepo userRepo;
+    private ProfileRepo profileRepo;
 
     @Autowired
     private ContentRepo contentRepo;
 
-    /**
-     * Records a new interaction between a user and content.
-     * @param userId ID of the user
-     * @param contentId ID of the content
-     * @param type Type of interaction (e.g., "watched", "rated")
-     * @return Success or error message
-     */
-    public String recordInteraction(Long userId, Long contentId, String type) {
-        // Find the real User and Content objects from the database
-        User user = userRepo.findById(userId).orElse(null);
+    public String recordInteraction(Long profileId, Long contentId, String type) {
+        Profile profile = profileRepo.findById(profileId).orElse(null);
         Content content = contentRepo.findById(contentId).orElse(null);
 
-        if (user == null || content == null) {
-            return "Error: User or Content not found";
+        if (profile == null || content == null) {
+            return "Error: Profile or Content not found";
         }
 
         UserContentInteraction interaction = new UserContentInteraction();
-        interaction.setUser(user);
+        interaction.setProfile(profile);
         interaction.setContent(content);
         interaction.setInteractionType(type);
-        
         
         interactionRepo.save(interaction);
         return "Interaction recorded successfully: " + type;
     }
 
-    
-    public List<UserContentInteraction> getUserHistory(Long userId) {
-        return interactionRepo.findByUserId(userId);
+    // ENSURE THESE NAMES MATCH THE CONTROLLER CALLS
+    public List<UserContentInteraction> getProfileHistory(Long profileId) {
+        return interactionRepo.findByProfileId(profileId);
     }
 
-    
-    public List<UserContentInteraction> getUserInteractionsByType(Long userId, String type) {
-        return interactionRepo.findByUserIdAndInteractionType(userId, type);
+    public List<UserContentInteraction> getProfileInteractionsByType(Long profileId, String type) {
+        return interactionRepo.findByProfileIdAndInteractionType(profileId, type);
     }
 }

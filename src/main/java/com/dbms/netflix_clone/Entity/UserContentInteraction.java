@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+
 @Entity
 @Table(name = "user_interactions")
 @Data
@@ -13,8 +14,8 @@ public class UserContentInteraction {
     private Long interactionId; // InteractionID (Primary Key)
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user; // UserID (Foreign Key)
+    @JoinColumn(name = "profile_id", nullable = false)
+    private Profile profile; // UserID (Foreign Key)
 
     @ManyToOne
     @JoinColumn(name = "content_id", nullable = false)
@@ -29,4 +30,9 @@ public class UserContentInteraction {
     protected void onCreate() {
         this.interactionDate = LocalDateTime.now(); // Automatically sets current time
     }
+
+
+
+
+
 }

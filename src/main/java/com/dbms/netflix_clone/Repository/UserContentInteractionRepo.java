@@ -7,15 +7,12 @@ import java.util.*;
 
 
 
-@Repository
+   @Repository
 public interface UserContentInteractionRepo extends JpaRepository<UserContentInteraction, Long> {
 
-    // Retrieve all interactions for a specific user (e.g., full history)
-    List<UserContentInteraction> findByUserId(Long userId);
+    // Get history for a specific profile (e.g., Dad's history vs. Kid's history)
+    List<UserContentInteraction> findByProfileId(Long profileId);
 
-    // Filter interactions by type for a specific user (e.g., only "watched" or "rated")
-    List<UserContentInteraction> findByUserIdAndInteractionType(Long userId, String interactionType);
-
-    // Retrieve all interactions for a specific piece of content (e.g., all users who watched 'Spider-Man')
-    List<UserContentInteraction> findByContentId(Long contentId);
+    // Filter by type for a specific profile (e.g., just "Rated" movies for Profile A)
+    List<UserContentInteraction> findByProfileIdAndInteractionType(Long profileId, String type);
 }

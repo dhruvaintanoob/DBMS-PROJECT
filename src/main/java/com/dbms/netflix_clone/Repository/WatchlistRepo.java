@@ -9,7 +9,13 @@ import java.util.List;
 @Repository
 public interface WatchlistRepo extends JpaRepository<Watchlist, Long> {
 
-    List<Watchlist> findByUserId(Long userId);
+    // Find all movies/shows saved to a specific profile
+    List<Watchlist> findByProfileId(Long profileId);
 
-    boolean existsByUserIdAndContentId(Long userId, Long contentId);
+    // Check if a specific piece of content is already in a specific profile's list
+    boolean existsByProfileIdAndContentId(Long profileId, Long contentId);
+
+
+    // In WatchlistRepo interface
+    Watchlist findByProfileIdAndContentId(Long profileId, Long contentId);
 }

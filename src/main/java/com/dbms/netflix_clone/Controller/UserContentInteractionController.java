@@ -16,34 +16,34 @@ public class UserContentInteractionController {
     private UserContentInteractionService interactionService;
 
     /**
-     * POST: Record a new user-content interaction.
-     * URL Example: http://localhost:8080/api/interactions/add?userId=1&contentId=5&type=watched
+     * POST: Record a new interaction for a specific profile.
+     * URL Example: http://localhost:8080/api/interactions/add?profileId=1&contentId=5&type=watched
      */
     @PostMapping("/add")
     public String addInteraction(
-            @RequestParam Long userId, 
+            @RequestParam Long profileId, // Updated from userId
             @RequestParam Long contentId, 
             @RequestParam String type) {
-        return interactionService.recordInteraction(userId, contentId, type);
+        return interactionService.recordInteraction(profileId, contentId, type);
     }
 
     /**
-     * GET: Retrieve the full history for a specific user.
-     * URL Example: http://localhost:8080/api/interactions/user/1
+     * GET: Retrieve the full history for a specific profile.
+     * URL Example: http://localhost:8080/api/interactions/profile/1
      */
-    @GetMapping("/user/{userId}")
-    public List<UserContentInteraction> getUserHistory(@PathVariable Long userId) {
-        return interactionService.getUserHistory(userId);
+    @GetMapping("/profile/{profileId}") // Updated path for clarity
+    public List<UserContentInteraction> getProfileHistory(@PathVariable Long profileId) {
+        return interactionService.getProfileHistory(profileId);
     }
 
     /**
-     * GET: Retrieve specific interaction types for a user (e.g., only "rated").
-     * URL Example: http://localhost:8080/api/interactions/user/1/type?type=rated
+     * GET: Retrieve specific interaction types for a profile (e.g., only "rated").
+     * URL Example: http://localhost:8080/api/interactions/profile/1/type?type=rated
      */
-    @GetMapping("/user/{userId}/type")
+    @GetMapping("/profile/{profileId}/type")
     public List<UserContentInteraction> getInteractionsByType(
-            @PathVariable Long userId, 
+            @PathVariable Long profileId, 
             @RequestParam String type) {
-        return interactionService.getUserInteractionsByType(userId, type);
+        return interactionService.getProfileInteractionsByType(profileId, type);
     }
 }

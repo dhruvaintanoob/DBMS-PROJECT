@@ -9,6 +9,7 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
+
 @RequestMapping("/api/watchlist")
 public class WatchlistController {
     @Autowired
@@ -16,19 +17,20 @@ public class WatchlistController {
 
     // 1. POST: Add movie to watchlist
     @PostMapping("/add")
-    public String addToWatchlist(@RequestParam Long userId, @RequestParam Long contentId) {
-        return watchlistService.addToWatchlist(userId, contentId);
+    public String addToWatchlist(@RequestParam Long profileId, @RequestParam Long contentId) {
+        return watchlistService.addToWatchlist(profileId, contentId);
     }
 
-    // 2. GET: Get a user's watchlist
-    @GetMapping("/user/{userId}")
-    public List<Watchlist> getUserWatchlist(@PathVariable Long userId) {
-        return watchlistService.getUserWatchlist(userId);
+    // 2. GET: Get a specific profile's watchlist
+    // FIX: Path variable name {profileId} must match the @PathVariable name
+    @GetMapping("/profile/{profileId}") 
+    public List<Watchlist> getProfileWatchlist(@PathVariable Long profileId) {
+        return watchlistService.getProfileWatchlist(profileId);
     }
 
-    // 3. DELETE: Remove an item
-    @DeleteMapping("/delete/{id}")
-    public String removeFromWatchlist(@PathVariable Long id) {
-        return watchlistService.removeFromWatchlist(id);
-    }   
+    // 3. DELETE: Remove an item using both IDs for safety
+    @DeleteMapping("/remove")
+    public String removeFromWatchlist(@RequestParam Long profileId, @RequestParam Long contentId) {
+      return watchlistService.removeFromWatchlist(profileId, contentId);
+    }  
 }

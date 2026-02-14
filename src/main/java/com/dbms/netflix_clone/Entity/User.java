@@ -3,6 +3,8 @@ package com.dbms.netflix_clone.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity // tells jpa to look at this and generate a corresponding table 
 @Table(name = "users")
 @Data // writes all the getter setter functions automatically
@@ -12,6 +14,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Tells MySQL to auto-increment the ID
 
     private Long id;
+
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Profile> profiles;
 
     @Column(nullable = false) 
     private String username;
