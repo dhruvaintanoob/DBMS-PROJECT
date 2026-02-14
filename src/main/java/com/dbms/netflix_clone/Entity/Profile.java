@@ -14,7 +14,7 @@ public class Profile {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn( nullable = false)
     private User user;
     //primary key is taken as the referenced column by default when using the @JoinColumn annotation
     
