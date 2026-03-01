@@ -2,6 +2,7 @@ package com.dbms.netflix_clone.Entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class Profile {
 
     @ManyToOne
     @JoinColumn( nullable = false)
+    @JsonBackReference
     private User user;
     //primary key is taken as the referenced column by default when using the @JoinColumn annotation
     

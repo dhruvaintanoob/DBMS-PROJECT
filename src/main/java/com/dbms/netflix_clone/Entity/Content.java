@@ -25,4 +25,9 @@ public class Content {
 
     @Column(columnDefinition = "TEXT") // TEXT is a data type in MySQL for long text
     private String description;
+    
+    // New fields for YouTube integration
+    private String youtubeUrl;
+    
+    private String thumbnailUrl;
 }

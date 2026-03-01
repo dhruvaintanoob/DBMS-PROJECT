@@ -2,6 +2,7 @@ package com.dbms.netflix_clone.Entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,11 +19,13 @@ public class Watchlist {
     // Foreign Key to User
     @ManyToOne
     @JoinColumn(name = "profile_id", nullable = false)
+    @JsonIgnoreProperties({"user", "watchlists", "interactions"})
     private Profile profile;
 
     // Foreign Key to Content
     @ManyToOne
     @JoinColumn(name = "content_id", nullable = false)
+    @JsonIgnoreProperties({"watchlists", "interactions"})
     private Content content;
 
 
