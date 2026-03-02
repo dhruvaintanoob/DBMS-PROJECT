@@ -38,8 +38,11 @@ export interface Content {
   duration: number;
   rating: string;
   description: string;
-  youtubeUrl?: string; // Added for YouTube integration
-  thumbnailUrl?: string; // Added for custom thumbnails
+  videoLocation?: string; // 'youtube' or 'local'
+  youtubeUrl?: string; // For YouTube videos
+  localVideoPath?: string; // For local videos
+  thumbnailUrl?: string;
+  requiredPlan?: string; // Minimum subscription plan required
 }
 
 // Watchlist types

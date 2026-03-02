@@ -1,13 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
-import { User, Lock, Bell, Monitor, CreditCard, Shield } from 'lucide-react';
+import { User, Lock, Bell, Monitor, Shield } from 'lucide-react';
+import { profileService } from '../services/profileService';
 
 const SettingsPage: React.FC = () => {
-  const { user, currentProfile, logout } = useAuth();
+  const { user, currentProfile, logout, setCurrentProfile } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Profile settings state
+  const [profileName, setProfileName] = useState(currentProfile?.profileName || '');
+  const [isKidProfile, setIsKidProfile] = useState(currentProfile?.isKidProfile || false);
+  
+  // Notification settings state
+  const [notifications, setNotifications] = useState({
+    newContent: true,
+    recommendations: true,
+    watchlist: true,
+    email: false,
+    push: false,
+  });
+  
+  // Playback settings state
+  const [playbackSettings, setPlaybackSettings] = useState({
+    videoQuality: 'auto',
+    autoplayNext: true,
+    autoplayPreviews: false,
+    subtitles: 'off',
+    audio: 'en',
+  });
+  
+  // Privacy settings state
+  const [privacySettings, setPrivacySettings] = useState({
+    dataCollection: true,
+    analytics: true,
+    marketing: false,
+    thirdParty: false,
+  });
+
+  useEffect(() => {
+    if (currentProfile) {
+      setProfileName(currentProfile.profileName);
+      setIsKidProfile(currentProfile.isKidProfile);
+    }
+  }, [currentProfile]);
+
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!currentProfile) return;
+    
+    setIsLoading(true);
+    try {
+      await profileService.updateProfile(
+        currentProfile.id,
+        profileName,
+        isKidProfile,
+        currentProfile.avatarUrl
+      );
+      
+      // Update the current profile in context
+      const updatedProfile = { ...currentProfile, profileName, isKidProfile };
+      setCurrentProfile(updatedProfile);
+      
+      showMessage('success', 'Profile updated successfully!');
+    } catch (error: any) {
+      showMessage('error', error.response?.data || 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveNotifications = () => {
+    localStorage.setItem('notificationSettings', JSON.stringify(notifications));
+    showMessage('success', 'Notification preferences saved!');
+  };
+
+  const handleSavePlayback = () => {
+    localStorage.setItem('playbackSettings', JSON.stringify(playbackSettings));
+    showMessage('success', 'Playback settings saved!');
+  };
+
+  const handleSavePrivacy = () => {
+    localStorage.setItem('privacySettings', JSON.stringify(privacySettings));
+    showMessage('success', 'Privacy settings saved!');
+  };
 
   const handleLogout = () => {
     logout();
@@ -19,7 +103,6 @@ const SettingsPage: React.FC = () => {
     { id: 'account', label: 'Account', icon: Lock },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'playback', label: 'Playback', icon: Monitor },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'privacy', label: 'Privacy', icon: Shield },
   ];
 
@@ -29,14 +112,21 @@ const SettingsPage: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Profile Settings</h2>
+            
+            {message && (
+              <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                {message.text}
+              </div>
+            )}
+            
             <div className="bg-neutral-dark p-6 rounded-xl">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-20 h-20 bg-neutral-gray rounded-xl flex items-center justify-center">
                   <User size={32} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold">{currentProfile?.profileName}</h3>
-                  <p className="text-gray-400">{currentProfile?.isKidProfile ? 'Kids Profile' : 'Adult Profile'}</p>
+                  <h3 className="text-xl font-semibold">{profileName}</h3>
+                  <p className="text-gray-400">{isKidProfile ? 'Kids Profile' : 'Adult Profile'}</p>
                 </div>
               </div>
               
@@ -45,8 +135,10 @@ const SettingsPage: React.FC = () => {
                   <label className="block text-sm font-medium mb-2">Profile Name</label>
                   <input
                     type="text"
-                    defaultValue={currentProfile?.profileName}
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
                     className="input-field"
+                    placeholder="Enter profile name"
                   />
                 </div>
                 
@@ -54,7 +146,8 @@ const SettingsPage: React.FC = () => {
                   <input
                     type="checkbox"
                     id="kidProfile"
-                    defaultChecked={currentProfile?.isKidProfile}
+                    checked={isKidProfile}
+                    onChange={(e) => setIsKidProfile(e.target.checked)}
                     className="w-4 h-4 text-primary-blue bg-neutral-gray border-neutral-lightGray rounded"
                   />
                   <label htmlFor="kidProfile" className="text-sm">
@@ -62,7 +155,13 @@ const SettingsPage: React.FC = () => {
                   </label>
                 </div>
                 
-                <button className="btn-primary">Save Changes</button>
+                <button 
+                  onClick={handleSaveProfile}
+                  disabled={isLoading}
+                  className="btn-primary disabled:opacity-50"
+                >
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </button>
               </div>
             </div>
           </div>
@@ -72,62 +171,57 @@ const SettingsPage: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Account Settings</h2>
+            
+            {message && (
+              <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                {message.text}
+              </div>
+            )}
+            
             <div className="bg-neutral-dark p-6 rounded-xl">
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Username</label>
                   <input
                     type="text"
-                    defaultValue={user?.username}
-                    className="input-field"
+                    value={user?.username}
+                    className="input-field bg-neutral-gray cursor-not-allowed"
                     disabled
                   />
+                  <p className="text-xs text-gray-500 mt-1">Username cannot be changed</p>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-2">Email</label>
                   <input
                     type="email"
-                    defaultValue={user?.email}
-                    className="input-field"
+                    value={user?.email}
+                    className="input-field bg-neutral-gray cursor-not-allowed"
+                    disabled
                   />
+                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-2">Subscription Plan</label>
-                  <select className="input-field" defaultValue={user?.subscriptionPlan}>
-                    <option value="Basic">Basic Plan</option>
-                    <option value="Standard">Standard Plan</option>
-                    <option value="Premium">Premium Plan</option>
-                  </select>
+                  <div className="bg-neutral-gray p-4 rounded-lg border-2 border-primary-blue">
+                    <h3 className="text-2xl font-semibold mb-2">
+                      {user?.subscriptionPlan || 'Basic'} Plan
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      {user?.subscriptionPlan === 'Basic' && 'Watch on 1 device • Standard Definition'}
+                      {user?.subscriptionPlan === 'Standard' && 'Watch on 2 devices • High Definition'}
+                      {user?.subscriptionPlan === 'Premium' && 'Watch on 4 devices • Ultra High Definition'}
+                      {!user?.subscriptionPlan && 'Watch on 1 device • Standard Definition'}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Plan selected during registration cannot be changed</p>
                 </div>
                 
                 <div className="pt-4 border-t border-neutral-gray">
-                  <h3 className="text-lg font-semibold mb-4">Change Password</h3>
-                  <div className="space-y-4">
-                    <input
-                      type="password"
-                      placeholder="Current Password"
-                      className="input-field"
-                    />
-                    <input
-                      type="password"
-                      placeholder="New Password"
-                      className="input-field"
-                    />
-                    <input
-                      type="password"
-                      placeholder="Confirm New Password"
-                      className="input-field"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex gap-4">
-                  <button className="btn-primary">Save Changes</button>
                   <button 
                     onClick={handleLogout}
-                    className="btn-secondary bg-red-600 hover:bg-red-700"
+                    className="btn-secondary bg-red-600 hover:bg-red-700 w-full"
                   >
                     Sign Out
                   </button>
@@ -141,6 +235,13 @@ const SettingsPage: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Notification Settings</h2>
+            
+            {message && (
+              <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                {message.text}
+              </div>
+            )}
+            
             <div className="bg-neutral-dark p-6 rounded-xl">
               <div className="space-y-4">
                 {[
@@ -154,7 +255,8 @@ const SettingsPage: React.FC = () => {
                     <input
                       type="checkbox"
                       id={setting.id}
-                      defaultChecked={true}
+                      checked={notifications[setting.id as keyof typeof notifications]}
+                      onChange={(e) => setNotifications({ ...notifications, [setting.id]: e.target.checked })}
                       className="w-4 h-4 text-primary-blue bg-neutral-gray border-neutral-lightGray rounded mt-1"
                     />
                     <div>
@@ -166,7 +268,9 @@ const SettingsPage: React.FC = () => {
                   </div>
                 ))}
                 
-                <button className="btn-primary">Save Preferences</button>
+                <button onClick={handleSaveNotifications} className="btn-primary">
+                  Save Preferences
+                </button>
               </div>
             </div>
           </div>
@@ -176,11 +280,22 @@ const SettingsPage: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Playback Settings</h2>
+            
+            {message && (
+              <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                {message.text}
+              </div>
+            )}
+            
             <div className="bg-neutral-dark p-6 rounded-xl">
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Video Quality</label>
-                  <select className="input-field">
+                  <select 
+                    className="input-field"
+                    value={playbackSettings.videoQuality}
+                    onChange={(e) => setPlaybackSettings({ ...playbackSettings, videoQuality: e.target.value })}
+                  >
                     <option value="auto">Auto (recommended)</option>
                     <option value="high">High (1080p)</option>
                     <option value="medium">Medium (720p)</option>
@@ -195,7 +310,8 @@ const SettingsPage: React.FC = () => {
                       <input
                         type="checkbox"
                         id="autoplayNext"
-                        defaultChecked={true}
+                        checked={playbackSettings.autoplayNext}
+                        onChange={(e) => setPlaybackSettings({ ...playbackSettings, autoplayNext: e.target.checked })}
                         className="w-4 h-4 text-primary-blue bg-neutral-gray border-neutral-lightGray rounded"
                       />
                       <label htmlFor="autoplayNext">Autoplay next episode</label>
@@ -204,7 +320,8 @@ const SettingsPage: React.FC = () => {
                       <input
                         type="checkbox"
                         id="autoplayPreviews"
-                        defaultChecked={false}
+                        checked={playbackSettings.autoplayPreviews}
+                        onChange={(e) => setPlaybackSettings({ ...playbackSettings, autoplayPreviews: e.target.checked })}
                         className="w-4 h-4 text-primary-blue bg-neutral-gray border-neutral-lightGray rounded"
                       />
                       <label htmlFor="autoplayPreviews">Autoplay previews while browsing</label>
@@ -215,13 +332,21 @@ const SettingsPage: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2">Subtitles & Audio</label>
                   <div className="space-y-4">
-                    <select className="input-field">
+                    <select 
+                      className="input-field"
+                      value={playbackSettings.subtitles}
+                      onChange={(e) => setPlaybackSettings({ ...playbackSettings, subtitles: e.target.value })}
+                    >
                       <option value="off">Subtitles: Off</option>
                       <option value="en">English</option>
                       <option value="es">Spanish</option>
                       <option value="fr">French</option>
                     </select>
-                    <select className="input-field">
+                    <select 
+                      className="input-field"
+                      value={playbackSettings.audio}
+                      onChange={(e) => setPlaybackSettings({ ...playbackSettings, audio: e.target.value })}
+                    >
                       <option value="en">Audio: English</option>
                       <option value="es">Spanish</option>
                       <option value="fr">French</option>
@@ -229,62 +354,9 @@ const SettingsPage: React.FC = () => {
                   </div>
                 </div>
                 
-                <button className="btn-primary">Save Settings</button>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'billing':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Billing & Subscription</h2>
-            <div className="bg-neutral-dark p-6 rounded-xl">
-              <div className="space-y-6">
-                <div className="border border-primary-blue rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-2">Current Plan: {user?.subscriptionPlan}</h3>
-                  <p className="text-gray-400 mb-4">
-                    {user?.subscriptionPlan === 'Basic' && 'Watch on 1 device, Standard Definition'}
-                    {user?.subscriptionPlan === 'Standard' && 'Watch on 2 devices, High Definition'}
-                    {user?.subscriptionPlan === 'Premium' && 'Watch on 4 devices, Ultra High Definition'}
-                  </p>
-                  <div className="text-2xl font-bold">
-                    ${user?.subscriptionPlan === 'Basic' ? '8.99' : user?.subscriptionPlan === 'Standard' ? '13.99' : '18.99'}/month
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Available Plans</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {['Basic', 'Standard', 'Premium'].map((plan) => (
-                      <div key={plan} className={`border rounded-lg p-4 ${user?.subscriptionPlan === plan ? 'border-primary-blue' : 'border-neutral-gray'}`}>
-                        <h4 className="font-semibold">{plan}</h4>
-                        <div className="text-xl font-bold my-2">
-                          ${plan === 'Basic' ? '8.99' : plan === 'Standard' ? '13.99' : '18.99'}/month
-                        </div>
-                        <ul className="text-sm text-gray-400 space-y-1">
-                          <li>• {plan === 'Basic' ? '1' : plan === 'Standard' ? '2' : '4'} device(s)</li>
-                          <li>• {plan === 'Basic' ? 'SD' : plan === 'Standard' ? 'HD' : 'UHD'} quality</li>
-                          <li>• Unlimited content</li>
-                        </ul>
-                        {user?.subscriptionPlan !== plan && (
-                          <button className="btn-primary w-full mt-4">
-                            {plan === 'Basic' ? 'Downgrade' : 'Upgrade'}
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t border-neutral-gray">
-                  <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-                  <div className="bg-neutral-gray p-4 rounded-lg">
-                    <p className="text-gray-400">**** **** **** 1234</p>
-                    <p className="text-sm text-gray-500">Expires 12/25</p>
-                  </div>
-                  <button className="btn-secondary mt-2">Update Payment Method</button>
-                </div>
+                <button onClick={handleSavePlayback} className="btn-primary">
+                  Save Settings
+                </button>
               </div>
             </div>
           </div>
@@ -294,6 +366,13 @@ const SettingsPage: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Privacy & Security</h2>
+            
+            {message && (
+              <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                {message.text}
+              </div>
+            )}
+            
             <div className="bg-neutral-dark p-6 rounded-xl">
               <div className="space-y-6">
                 {[
@@ -306,7 +385,8 @@ const SettingsPage: React.FC = () => {
                     <input
                       type="checkbox"
                       id={setting.id}
-                      defaultChecked={setting.id !== 'thirdParty'}
+                      checked={privacySettings[setting.id as keyof typeof privacySettings]}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, [setting.id]: e.target.checked })}
                       className="w-4 h-4 text-primary-blue bg-neutral-gray border-neutral-lightGray rounded mt-1"
                     />
                     <div>
@@ -318,15 +398,9 @@ const SettingsPage: React.FC = () => {
                   </div>
                 ))}
                 
-                <div className="pt-4 border-t border-neutral-gray">
-                  <h3 className="text-lg font-semibold mb-4">Data Management</h3>
-                  <div className="space-y-2">
-                    <button className="btn-secondary w-full">Download My Data</button>
-                    <button className="btn-secondary w-full bg-red-600 hover:bg-red-700">Delete Account</button>
-                  </div>
-                </div>
-                
-                <button className="btn-primary">Save Privacy Settings</button>
+                <button onClick={handleSavePrivacy} className="btn-primary">
+                  Save Privacy Settings
+                </button>
               </div>
             </div>
           </div>

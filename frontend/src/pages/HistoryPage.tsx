@@ -120,16 +120,18 @@ const HistoryPage: React.FC = () => {
 
         <div className="mb-8">
           <div className="flex gap-4 overflow-x-auto pb-2">
-            {['all', 'watched', 'rated'].map(type => (
+            {['all', 'watched', 'liked', 'disliked'].map(type => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors capitalize ${
+                className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors capitalize flex items-center gap-2 ${
                   filterType === type
                     ? 'bg-primary-blue text-white'
                     : 'bg-neutral-gray text-gray-300 hover:bg-neutral-lightGray'
                 }`}
               >
+                {type === 'liked' && '👍'}
+                {type === 'disliked' && '👎'}
                 {type === 'all' ? 'All Activity' : type}
               </button>
             ))}
@@ -164,9 +166,13 @@ const HistoryPage: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold">{interaction.content.title}</h3>
-                        <p className="text-sm text-gray-400">
-                          {interaction.interactionType} • {new Date(interaction.interactionDate).toLocaleDateString()}
-                        </p>
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <span className="capitalize">{interaction.interactionType}</span>
+                          {interaction.interactionType === 'liked' && <span className="text-green-500">👍</span>}
+                          {interaction.interactionType === 'disliked' && <span className="text-red-500">👎</span>}
+                          <span>•</span>
+                          <span>{new Date(interaction.interactionDate).toLocaleDateString()}</span>
+                        </div>
                       </div>
                       <button
                         onClick={() => handlePlay(interaction.content)}

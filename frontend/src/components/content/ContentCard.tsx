@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Plus, Info, Check } from 'lucide-react';
+import { Play, Plus, Info, Check, Lock } from 'lucide-react';
 import { Content } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { watchlistService } from '../../services/watchlistService';
 import { interactionService } from '../../services/interactionService';
+import { canAccessContent } from '../../utils/planUtils';
 
 interface ContentCardProps {
   content: Content;
@@ -22,6 +23,9 @@ const ContentCard: React.FC<ContentCardProps> = ({
   const [isInWatchlist, setIsInWatchlist] = useState(initialWatchlistState);
   const [isLoading, setIsLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string>('');
+  
+  // Check if user has access to this content
+  const hasAccess = canAccessContent(user?.subscriptionPlan, content.requiredPlan);
 
   // Use a mock profile ID if no profile is selected but user exists
   const getProfileId = () => {
@@ -118,13 +122,25 @@ const ContentCard: React.FC<ContentCardProps> = ({
           </div>
         )}
         
+        {/* Plan restriction badge */}
+        {!hasAccess && content.requiredPlan && (
+          <div className="absolute top-2 right-2 bg-yellow-600 text-white px-2 py-1 rounded flex items-center gap-1 text-xs font-semibold">
+            <Lock size={12} />
+            {content.requiredPlan}
+          </div>
+        )}
+        
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-t-xl">
           <button
             onClick={handlePlay}
             className="bg-white text-black rounded-full p-3 hover:bg-gray-200 transition-colors shadow-lg"
           >
-            <Play size={24} fill="currentColor" />
+            {hasAccess ? (
+              <Play size={24} fill="currentColor" />
+            ) : (
+              <Lock size={24} />
+            )}
           </button>
         </div>
       </div>
@@ -150,9 +166,19 @@ const ContentCard: React.FC<ContentCardProps> = ({
           <button
             onClick={handlePlay}
             className="btn-primary flex-1 flex items-center justify-center gap-2"
+            title={hasAccess ? 'Play' : `Requires ${content.requiredPlan} plan`}
           >
-            <Play size={16} fill="currentColor" />
-            Play
+            {hasAccess ? (
+              <>
+                <Play size={16} fill="currentColor" />
+                Play
+              </>
+            ) : (
+              <>
+                <Lock size={16} />
+                Locked
+              </>
+            )}
           </button>
           
           <button

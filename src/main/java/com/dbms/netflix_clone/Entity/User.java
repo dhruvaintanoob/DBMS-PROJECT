@@ -30,5 +30,6 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String SubscriptionPlan;
+    @Column(name = "subscription_plan")
+    private String subscriptionPlan;
 }   
