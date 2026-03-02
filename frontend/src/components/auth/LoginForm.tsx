@@ -112,6 +112,16 @@ const LoginForm: React.FC = () => {
               Sign up now
             </Link>
           </p>
+          
+          <div className="mt-4 pt-4 border-t border-neutral-gray">
+            <a 
+              href="/admin.html" 
+              target="_blank"
+              className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
+            >
+              🔧 Admin Panel
+            </a>
+          </div>
         </div>
       </div>
     </div>
