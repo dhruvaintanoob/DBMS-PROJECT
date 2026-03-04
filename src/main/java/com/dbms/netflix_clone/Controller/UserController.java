@@ -14,9 +14,34 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // Login response DTO to avoid lazy-loading issues and control returned fields
+    static class LoginResponse {
+        private Long id;
+        private String username;
+        private String email;
+        private String subscriptionPlan;
+        
+        public LoginResponse(User user) {
+            this.id = user.getId();
+            this.username = user.getUsername();
+            this.email = user.getEmail();
+            this.subscriptionPlan = user.getSubscriptionPlan();
+        }
+        
+        public Long getId() { return id; }
+        public String getUsername() { return username; }
+        public String getEmail() { return email; }
+        public String getSubscriptionPlan() { return subscriptionPlan; }
+    }
+
     @GetMapping("/all")
     public List<User> getAllUsers() {
         return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Long id) {
+        return userService.getUserById(id).orElse(null);
     }
 
     @PostMapping("/register")
@@ -24,8 +49,14 @@ public class UserController {
         return userService.registerNewUser(user);
     }
 
-    @PostMapping("/login") //we use POST for login because sending passwords in a GET request (in the URL) is insecure. POST hides the data inside the request body.
-    public User login(@RequestBody User user) {
-        return userService.login(user.getUsername(), user.getPassword());
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody User user) {
+        // Treat the "username" field from frontend as a generic identifier
+        // so users can log in with either their username or email.
+        User loggedInUser = userService.login(user.getUsername(), user.getPassword());
+        if (loggedInUser != null) {
+            return new LoginResponse(loggedInUser);
+        }
+        return null;
     }
 }

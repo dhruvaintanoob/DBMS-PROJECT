@@ -1,11 +1,14 @@
 package com.dbms.netflix_clone.Service;
 
 import com.dbms.netflix_clone.Entity.User;
+import com.dbms.netflix_clone.Entity.Profile;
 import com.dbms.netflix_clone.Repository.UserRepo;
+import com.dbms.netflix_clone.Repository.ProfileRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -13,12 +16,29 @@ public class UserService {
     @Autowired
     private UserRepo ur;
 
+    @Autowired
+    private ProfileRepo profileRepo;
+
     public String registerNewUser(User user) {
         if (ur.existsByEmail(user.getEmail())){
             return "Error , email already in Use";
         }
          
-        ur.save(user);
+        User savedUser = ur.save(user);
+        
+        // Create default profile for new user
+        try {
+            Profile defaultProfile = new Profile();
+            defaultProfile.setUser(savedUser);
+            defaultProfile.setProfileName(savedUser.getUsername());
+            defaultProfile.setKidProfile(false);
+            defaultProfile.setAvatarUrl(null);
+            profileRepo.save(defaultProfile);
+        } catch (Exception e) {
+            // If profile creation fails, still return success for user creation
+            System.err.println("Failed to create default profile for user: " + e.getMessage());
+        }
+        
         return "User registered successfully";
     }
 
@@ -26,8 +46,23 @@ public class UserService {
         return ur.findAll(); 
     }
 
-    public User login(String username, String password) {
-        User user = ur.findByUsername(username);
+    public Optional<User> getUserById(Long id) {
+        return ur.findById(id);
+    }
+
+    /**
+     * Authenticate a user by either username OR email plus password.
+     * This lets the frontend treat the "username" field as a generic identifier.
+     */
+    public User login(String identifier, String password) {
+        // Try username first
+        User user = ur.findByUsername(identifier);
+
+        // If no user found by username, try email
+        if (user == null) {
+            user = ur.findByEmail(identifier);
+        }
+
         if (user != null && user.getPassword().equals(password)) {
             return user;
         }

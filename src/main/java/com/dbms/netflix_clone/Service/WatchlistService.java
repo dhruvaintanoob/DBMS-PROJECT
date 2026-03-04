@@ -36,6 +36,11 @@ public class WatchlistService {
 
     // 1. Add to Watchlist using Profile ID
     public String addToWatchlist(Long profileId, Long contentId) {
+        // Validate inputs
+        if (profileId == null || contentId == null) {
+            return "Invalid profile or content ID";
+        }
+
         // Step A: Check if it's already in this specific profile's watchlist
         if (watchlistRepo.existsByProfileIdAndContentId(profileId, contentId)) {
             return "Movie already in profile watchlist";
@@ -45,8 +50,12 @@ public class WatchlistService {
         Profile profile = profileRepo.findById(profileId).orElse(null);
         Content content = contentRepo.findById(contentId).orElse(null);
 
-        if (profile == null || content == null) {
-            return "Profile or Content not found";
+        if (profile == null) {
+            return "Profile not found with ID: " + profileId;
+        }
+        
+        if (content == null) {
+            return "Content not found with ID: " + contentId;
         }
 
         // Step C: Link them to the Profile and Save
