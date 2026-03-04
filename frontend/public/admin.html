@@ -562,6 +562,13 @@
                 const response = await fetch(`${API_BASE}/users/all`);
                 const data = await response.json();
                 
+                console.log('Users data:', data); // Debug log
+                
+                // Check if data is an array
+                if (!Array.isArray(data)) {
+                    throw new Error('Expected array but got: ' + typeof data);
+                }
+                
                 let html = '<table><thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Plan</th><th>Actions</th></tr></thead><tbody>';
                 
                 data.forEach(item => {
@@ -580,6 +587,7 @@
                 html += '</tbody></table>';
                 document.getElementById('users-table').innerHTML = html;
             } catch (error) {
+                console.error('Error loading users:', error);
                 showMessage('Error loading users: ' + error.message, 'error');
             }
         }
@@ -593,7 +601,7 @@
                 document.getElementById('modalBody').innerHTML = `
                     <div class="form-group">
                         <label>Username</label>
-                        <input type="text" id="username" value="${user.username}" readonly />
+                        <input type="text" id="username" value="${user.username}" />
                     </div>
                     <div class="form-group">
                         <label>Email</label>
@@ -618,6 +626,7 @@
 
         async function updateUser(id) {
             const user = {
+                username: document.getElementById('username').value,
                 email: document.getElementById('email').value,
                 subscriptionPlan: document.getElementById('subscriptionPlan').value
             };
@@ -634,9 +643,12 @@
                     closeModal();
                     loadUsers();
                 } else {
-                    showMessage('Error updating user', 'error');
+                    const errorText = await response.text();
+                    console.error('Update error:', errorText);
+                    showMessage('Error updating user: ' + errorText, 'error');
                 }
             } catch (error) {
+                console.error('Update error:', error);
                 showMessage('Error: ' + error.message, 'error');
             }
         }
@@ -673,7 +685,7 @@
                     html += `<tr>
                         <td>${item.id}</td>
                         <td>${item.profileName}</td>
-                        <td>${item.user?.id || 'N/A'}</td>
+                        <td>${item.userId || 'N/A'}</td>
                         <td>${item.kidProfile ? 'Yes' : 'No'}</td>
                         <td class="actions">
                             <button onclick="editProfile(${item.id})">Edit</button>

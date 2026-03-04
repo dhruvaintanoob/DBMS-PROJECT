@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @CrossOrigin
 @RestController
@@ -39,6 +40,49 @@ public class AdminController {
         public void setPassword(String password) {
             this.password = password;
         }
+    }
+
+    // User DTO for admin responses (without profiles to avoid lazy loading issues)
+    static class UserDTO {
+        private Long id;
+        private String username;
+        private String email;
+        private String subscriptionPlan;
+        
+        public UserDTO(User user) {
+            this.id = user.getId();
+            this.username = user.getUsername();
+            this.email = user.getEmail();
+            this.subscriptionPlan = user.getSubscriptionPlan();
+        }
+        
+        public Long getId() { return id; }
+        public String getUsername() { return username; }
+        public String getEmail() { return email; }
+        public String getSubscriptionPlan() { return subscriptionPlan; }
+    }
+
+    // Profile DTO for admin responses
+    static class ProfileDTO {
+        private Long id;
+        private String profileName;
+        private Long userId;
+        private String avatarUrl;
+        private boolean kidProfile;
+        
+        public ProfileDTO(Profile profile) {
+            this.id = profile.getId();
+            this.profileName = profile.getProfileName();
+            this.userId = profile.getUser() != null ? profile.getUser().getId() : null;
+            this.avatarUrl = profile.getAvatarUrl();
+            this.kidProfile = profile.isKidProfile();
+        }
+        
+        public Long getId() { return id; }
+        public String getProfileName() { return profileName; }
+        public Long getUserId() { return userId; }
+        public String getAvatarUrl() { return avatarUrl; }
+        public boolean isKidProfile() { return kidProfile; }
     }
 
     // Verify admin password
@@ -82,19 +126,38 @@ public class AdminController {
     // ========== USER CRUD ==========
     
     @GetMapping("/users/all")
-    public List<User> getAllUsers() {
-        return userRepo.findAll();
+    public List<UserDTO> getAllUsers() {
+        return userRepo.findAll().stream()
+                .map(UserDTO::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/users/{id}")
-    public Optional<User> getUserById(@PathVariable Long id) {
-        return userRepo.findById(id);
+    public UserDTO getUserById(@PathVariable Long id) {
+        User user = userRepo.findById(id).orElseThrow();
+        return new UserDTO(user);
     }
 
     @PutMapping("/users/update/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody User user) {
-        user.setId(id);
-        return userRepo.save(user);
+    public UserDTO updateUser(@PathVariable Long id, @RequestBody User user) {
+        // Fetch existing user to preserve relationships
+        User existingUser = userRepo.findById(id).orElseThrow();
+        
+        // Only update non-null fields
+        if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+            existingUser.setUsername(user.getUsername());
+        }
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            existingUser.setEmail(user.getEmail());
+        }
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            existingUser.setPassword(user.getPassword());
+        }
+        if (user.getSubscriptionPlan() != null) {
+            existingUser.setSubscriptionPlan(user.getSubscriptionPlan());
+        }
+        
+        return new UserDTO(userRepo.save(existingUser));
     }
 
     @DeleteMapping("/users/delete/{id}")
@@ -106,19 +169,26 @@ public class AdminController {
     // ========== PROFILE CRUD ==========
     
     @GetMapping("/profiles/all")
-    public List<Profile> getAllProfiles() {
-        return profileRepo.findAll();
+    public List<ProfileDTO> getAllProfiles() {
+        return profileRepo.findAll().stream()
+                .map(ProfileDTO::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/profiles/{id}")
-    public Optional<Profile> getProfileById(@PathVariable Long id) {
-        return profileRepo.findById(id);
+    public ProfileDTO getProfileById(@PathVariable Long id) {
+        Profile profile = profileRepo.findById(id).orElseThrow();
+        return new ProfileDTO(profile);
     }
 
     @PutMapping("/profiles/update/{id}")
-    public Profile updateProfile(@PathVariable Long id, @RequestBody Profile profile) {
-        profile.setId(id);
-        return profileRepo.save(profile);
+    public ProfileDTO updateProfile(@PathVariable Long id, @RequestBody Profile profile) {
+        // Fetch existing profile to preserve user relationship
+        Profile existingProfile = profileRepo.findById(id).orElseThrow();
+        existingProfile.setProfileName(profile.getProfileName());
+        existingProfile.setAvatarUrl(profile.getAvatarUrl());
+        existingProfile.setKidProfile(profile.isKidProfile());
+        return new ProfileDTO(profileRepo.save(existingProfile));
     }
 
     @DeleteMapping("/profiles/delete/{id}")
