@@ -1,5 +1,6 @@
 package com.dbms.netflix_clone.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate; // for DATE types in java
@@ -46,8 +47,10 @@ public class Content {
 
     // Add relationships to enable cascade delete
     @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<com.dbms.netflix_clone.Entity.Watchlist> watchlists;
 
     @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<com.dbms.netflix_clone.Entity.UserContentInteraction> interactions;
 }

@@ -3,6 +3,7 @@ package com.dbms.netflix_clone.Entity;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -29,8 +30,10 @@ public class Profile {
 
     // Add relationships to enable cascade delete
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<com.dbms.netflix_clone.Entity.Watchlist> watchlists;
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<com.dbms.netflix_clone.Entity.UserContentInteraction> interactions;
 }
