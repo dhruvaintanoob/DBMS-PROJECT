@@ -28,6 +28,12 @@ public class AdminController {
 
     @Autowired
     private ProfileRepo profileRepo;
+    
+    @Autowired
+    private com.dbms.netflix_clone.Repository.WatchlistRepo watchlistRepo;
+    
+    @Autowired
+    private com.dbms.netflix_clone.Repository.UserContentInteractionRepo interactionRepo;
 
     // Password request DTO
     static class PasswordRequest {
@@ -162,8 +168,26 @@ public class AdminController {
 
     @DeleteMapping("/users/delete/{id}")
     public String deleteUser(@PathVariable Long id) {
-        userRepo.deleteById(id);
-        return "User deleted successfully";
+        try {
+            // Get user to find all their profiles
+            User user = userRepo.findById(id).orElseThrow();
+            
+            // Get all profiles for this user
+            List<Profile> profiles = profileRepo.findByUserId(id);
+            
+            // Delete all watchlist items and interactions for each profile
+            for (Profile profile : profiles) {
+                watchlistRepo.deleteByProfileId(profile.getId());
+                interactionRepo.deleteByProfileId(profile.getId());
+            }
+            
+            // Now delete the user (cascade will delete profiles)
+            userRepo.deleteById(id);
+            
+            return "User deleted successfully";
+        } catch (Exception e) {
+            return "Error deleting user: " + e.getMessage();
+        }
     }
 
     // ========== PROFILE CRUD ==========
