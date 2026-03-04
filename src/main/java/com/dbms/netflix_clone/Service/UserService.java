@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -45,8 +46,23 @@ public class UserService {
         return ur.findAll(); 
     }
 
-    public User login(String username, String password) {
-        User user = ur.findByUsername(username);
+    public Optional<User> getUserById(Long id) {
+        return ur.findById(id);
+    }
+
+    /**
+     * Authenticate a user by either username OR email plus password.
+     * This lets the frontend treat the "username" field as a generic identifier.
+     */
+    public User login(String identifier, String password) {
+        // Try username first
+        User user = ur.findByUsername(identifier);
+
+        // If no user found by username, try email
+        if (user == null) {
+            user = ur.findByEmail(identifier);
+        }
+
         if (user != null && user.getPassword().equals(password)) {
             return user;
         }

@@ -28,15 +28,18 @@ public class VideoController {
     @GetMapping("/stream")
     public ResponseEntity<Resource> streamVideo(@RequestParam String path) {
         try {
+            // Normalize the incoming path (trim spaces and remove any surrounding quotes)
+            String normalizedPath = path == null ? "" : path.trim().replace("\"", "");
+
             Path filePath;
             
             // Check if path is absolute (starts with / or contains :)
-            if (path.startsWith("/") || path.contains(":")) {
+            if (normalizedPath.startsWith("/") || normalizedPath.contains(":")) {
                 // Absolute path - use as is
-                filePath = Paths.get(path);
+                filePath = Paths.get(normalizedPath);
             } else {
                 // Relative path - prepend VIDEO_DIRECTORY
-                filePath = Paths.get(VIDEO_DIRECTORY + path);
+                filePath = Paths.get(VIDEO_DIRECTORY + normalizedPath);
             }
             
             System.out.println("Attempting to stream video from: " + filePath.toString());

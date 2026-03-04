@@ -17,6 +17,11 @@ export const authService = {
     return response.data;
   },
 
+  async getUserById(id: number): Promise<User | null> {
+    const response = await apiClient.get(`/api/users/${id}`);
+    return response.data || null;
+  },
+
   // Local storage helpers
   saveUser(user: User): void {
     localStorage.setItem('currentUser', JSON.stringify(user));

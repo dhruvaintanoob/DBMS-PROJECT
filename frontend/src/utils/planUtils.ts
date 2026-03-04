@@ -3,9 +3,28 @@
 export type SubscriptionPlan = 'Basic' | 'Standard' | 'Premium';
 
 const planHierarchy: Record<SubscriptionPlan, number> = {
-  'Basic': 1,
-  'Standard': 2,
-  'Premium': 3,
+  Basic: 1,
+  Standard: 2,
+  Premium: 3,
+};
+
+/**
+ * Normalize any plan string coming from backend/DB/UI
+ * into one of the canonical SubscriptionPlan values.
+ */
+const normalizePlan = (plan?: string): SubscriptionPlan => {
+  if (!plan) return 'Basic';
+
+  const normalized = plan.trim().toLowerCase();
+
+  // Be very forgiving about how the plan is stored, e.g.
+  // "Premium", "premium", "Premium Plan", "user_premium", etc.
+  if (normalized.includes('premium')) return 'Premium';
+  if (normalized.includes('standard')) return 'Standard';
+  if (normalized.includes('basic')) return 'Basic';
+
+  // Fallback to Basic for unknown values
+  return 'Basic';
 };
 
 /**
@@ -18,10 +37,9 @@ export const canAccessContent = (
   userPlan: string | undefined,
   requiredPlan: string | undefined
 ): boolean => {
-  // Default to Basic if not specified
-  const userTier = planHierarchy[(userPlan as SubscriptionPlan) || 'Basic'] || 1;
-  const requiredTier = planHierarchy[(requiredPlan as SubscriptionPlan) || 'Basic'] || 1;
-  
+  const userTier = planHierarchy[normalizePlan(userPlan)];
+  const requiredTier = planHierarchy[normalizePlan(requiredPlan)];
+
   return userTier >= requiredTier;
 };
 
@@ -37,21 +55,20 @@ export const getRequiredUpgrade = (
   if (canAccessContent(userPlan, requiredPlan)) {
     return null;
   }
-  return requiredPlan || 'Basic';
+
+  return normalizePlan(requiredPlan);
 };
 
 /**
  * Get plan features description
  */
 export const getPlanFeatures = (plan: string): string => {
-  switch (plan) {
+  switch (normalizePlan(plan)) {
     case 'Basic':
       return 'Watch on 1 device • Standard Definition';
     case 'Standard':
       return 'Watch on 2 devices • High Definition';
     case 'Premium':
       return 'Watch on 4 devices • Ultra High Definition';
-    default:
-      return 'Watch on 1 device • Standard Definition';
   }
 };

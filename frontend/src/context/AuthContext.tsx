@@ -79,16 +79,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    // Check for existing user session on app load
-    const savedUser = authService.getUser();
-    const savedProfile = authService.getProfile();
-    
-    if (savedUser) {
-      dispatch({ 
-        type: 'LOGIN_SUCCESS', 
-        payload: { user: savedUser, profile: savedProfile } 
-      });
-    }
+    // Check for existing user session on app load and refresh it from backend
+    const initializeAuth = async () => {
+      const savedUser = authService.getUser();
+      const savedProfile = authService.getProfile();
+
+      if (!savedUser) {
+        return;
+      }
+
+      try {
+        const freshUser = await authService.getUserById(savedUser.id);
+
+        if (freshUser) {
+          // Persist the refreshed user and use it for the session
+          authService.saveUser(freshUser);
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: { user: freshUser, profile: savedProfile },
+          });
+        } else {
+          // User no longer exists on server; clear local session
+          authService.removeUser();
+        }
+      } catch (error) {
+        console.error('Failed to refresh user from server, falling back to cached user.', error);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: { user: savedUser, profile: savedProfile },
+        });
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {

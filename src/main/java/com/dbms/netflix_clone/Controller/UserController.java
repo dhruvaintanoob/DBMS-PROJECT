@@ -14,7 +14,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // Login response DTO
+    // Login response DTO to avoid lazy-loading issues and control returned fields
     static class LoginResponse {
         private Long id;
         private String username;
@@ -39,6 +39,11 @@ public class UserController {
         return userService.getAllUsers();
     }
 
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Long id) {
+        return userService.getUserById(id).orElse(null);
+    }
+
     @PostMapping("/register")
     public String register(@RequestBody User user) {
         return userService.registerNewUser(user);
@@ -46,6 +51,8 @@ public class UserController {
 
     @PostMapping("/login")
     public LoginResponse login(@RequestBody User user) {
+        // Treat the "username" field from frontend as a generic identifier
+        // so users can log in with either their username or email.
         User loggedInUser = userService.login(user.getUsername(), user.getPassword());
         if (loggedInUser != null) {
             return new LoginResponse(loggedInUser);
