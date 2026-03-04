@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
         {/* Logo and Navigation */}
         <div className="flex items-center gap-8">
           <Link to="/browse" className="text-primary-blue text-2xl font-bold">
-            JARDFLIX
+            NetFlix Clone
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
