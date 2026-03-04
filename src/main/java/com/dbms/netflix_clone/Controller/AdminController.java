@@ -7,6 +7,7 @@ import com.dbms.netflix_clone.Repository.ContentRepo;
 import com.dbms.netflix_clone.Repository.UserRepo;
 import com.dbms.netflix_clone.Repository.ProfileRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -124,9 +125,38 @@ public class AdminController {
     }
 
     @DeleteMapping("/content/delete/{id}")
+    @Transactional
     public String deleteContent(@PathVariable Long id) {
-        contentRepo.deleteById(id);
-        return "Content deleted successfully";
+        try {
+            // First check if content exists
+            if (!contentRepo.existsById(id)) {
+                return "Content not found";
+            }
+            
+            // Log the deletion process for debugging
+            System.out.println("Deleting content with ID: " + id);
+            
+            // Check if there are related records before deletion
+            List<com.dbms.netflix_clone.Entity.Watchlist> watchlistEntries = watchlistRepo.findByContentId(id);
+            List<com.dbms.netflix_clone.Entity.UserContentInteraction> interactionEntries = interactionRepo.findByContentId(id);
+            
+            System.out.println("Found " + watchlistEntries.size() + " watchlist entries to delete");
+            System.out.println("Found " + interactionEntries.size() + " interaction entries to delete");
+            
+            // Delete related records manually using native queries
+            watchlistRepo.deleteByContentId(id);
+            interactionRepo.deleteByContentId(id);
+            
+            // Now delete the content
+            contentRepo.deleteById(id);
+            
+            System.out.println("Content deletion completed successfully");
+            return "Content deleted successfully";
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the full error
+            System.err.println("Error deleting content: " + e.getMessage());
+            return "Error deleting content: " + e.getMessage();
+        }
     }
 
     // ========== USER CRUD ==========
@@ -167,10 +197,13 @@ public class AdminController {
     }
 
     @DeleteMapping("/users/delete/{id}")
+    @Transactional
     public String deleteUser(@PathVariable Long id) {
         try {
-            // Get user to find all their profiles
-            User user = userRepo.findById(id).orElseThrow();
+            // First check if user exists
+            if (!userRepo.existsById(id)) {
+                return "User not found";
+            }
             
             // Get all profiles for this user
             List<Profile> profiles = profileRepo.findByUserId(id);
@@ -186,6 +219,7 @@ public class AdminController {
             
             return "User deleted successfully";
         } catch (Exception e) {
+            e.printStackTrace(); // Log the full error
             return "Error deleting user: " + e.getMessage();
         }
     }
@@ -216,8 +250,25 @@ public class AdminController {
     }
 
     @DeleteMapping("/profiles/delete/{id}")
+    @Transactional
     public String deleteProfile(@PathVariable Long id) {
-        profileRepo.deleteById(id);
-        return "Profile deleted successfully";
+        try {
+            // First check if profile exists
+            if (!profileRepo.existsById(id)) {
+                return "Profile not found";
+            }
+            
+            // Delete all watchlist items and interactions for this profile
+            watchlistRepo.deleteByProfileId(id);
+            interactionRepo.deleteByProfileId(id);
+            
+            // Now delete the profile
+            profileRepo.deleteById(id);
+            
+            return "Profile deleted successfully";
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the full error
+            return "Error deleting profile: " + e.getMessage();
+        }
     }
 }

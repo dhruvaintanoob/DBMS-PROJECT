@@ -27,6 +27,10 @@ public class Profile {
 
     private boolean isKidProfile = false;
 
+    // Add relationships to enable cascade delete
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.dbms.netflix_clone.Entity.Watchlist> watchlists;
 
-     
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.dbms.netflix_clone.Entity.UserContentInteraction> interactions;
 }

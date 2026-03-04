@@ -3,6 +3,7 @@ package com.dbms.netflix_clone.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate; // for DATE types in java
+import java.util.List;
 
 @Entity
 @Table(name = "content")
@@ -42,4 +43,11 @@ public class Content {
     // Subscription plan requirement
     @Column(name = "required_plan")
     private String requiredPlan = "Basic"; // Default to Basic plan
+
+    // Add relationships to enable cascade delete
+    @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.dbms.netflix_clone.Entity.Watchlist> watchlists;
+
+    @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.dbms.netflix_clone.Entity.UserContentInteraction> interactions;
 }

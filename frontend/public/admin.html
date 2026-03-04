@@ -544,13 +544,20 @@
                     method: 'DELETE'
                 });
                 
+                const result = await response.text();
+                
                 if (response.ok) {
-                    showMessage('Content deleted successfully!');
-                    loadContent();
+                    if (result.includes('successfully')) {
+                        showMessage(result);
+                        loadContent();
+                    } else {
+                        showMessage(result, 'error');
+                    }
                 } else {
-                    showMessage('Error deleting content', 'error');
+                    showMessage('Error deleting content: ' + result, 'error');
                 }
             } catch (error) {
+                console.error('Delete error:', error);
                 showMessage('Error: ' + error.message, 'error');
             }
         }
@@ -661,13 +668,20 @@
                     method: 'DELETE'
                 });
                 
+                const result = await response.text();
+                
                 if (response.ok) {
-                    showMessage('User deleted successfully!');
-                    loadUsers();
+                    if (result.includes('successfully')) {
+                        showMessage(result);
+                        loadUsers();
+                    } else {
+                        showMessage(result, 'error');
+                    }
                 } else {
-                    showMessage('Error deleting user', 'error');
+                    showMessage('Error deleting user: ' + result, 'error');
                 }
             } catch (error) {
+                console.error('Delete error:', error);
                 showMessage('Error: ' + error.message, 'error');
             }
         }
@@ -760,13 +774,20 @@
                     method: 'DELETE'
                 });
                 
+                const result = await response.text();
+                
                 if (response.ok) {
-                    showMessage('Profile deleted successfully!');
-                    loadProfiles();
+                    if (result.includes('successfully')) {
+                        showMessage(result);
+                        loadProfiles();
+                    } else {
+                        showMessage(result, 'error');
+                    }
                 } else {
-                    showMessage('Error deleting profile', 'error');
+                    showMessage('Error deleting profile: ' + result, 'error');
                 }
             } catch (error) {
+                console.error('Delete error:', error);
                 showMessage('Error: ' + error.message, 'error');
             }
         }
